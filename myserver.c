@@ -1,13 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <pthread.h>
+
 #include "myserver.h"
-#include "../include/proto.h"
+#include "../myinclude/proto.h"
 
 int main(int argc, char **argv)
 {
@@ -21,6 +14,8 @@ int main(int argc, char **argv)
     int val = 1;
     struct sockaddr_in l_addr;
     int l_addr_len = 0;
+    pthread_t pid;
+
     //创建套接字
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if (-1 == sd)
@@ -38,7 +33,7 @@ int main(int argc, char **argv)
     l_addr.sin_family = AF_INET;
     l_addr.sin_port = htons(SERVER_PORT);
     l_addr.sin_addr.s_addr = INADDR_ANY;
-    ;
+    
     l_addr_len = sizeof(struct sockaddr_in);
     //套接字绑定IP、端口号
     ret = bind(sd, (struct sockaddr *)&l_addr, l_addr_len);
@@ -66,7 +61,9 @@ int main(int argc, char **argv)
         if (c_sd == -1)
         {
             printf("accept err\r\n");
+            continue;
         }
+        pthread_create(&pid, NULL, (void *)pthread_handle,(void *)&c_sd);
     }
 
     flag = fcntl(c_sd, F_GETFL, 0);
@@ -91,4 +88,28 @@ ERR_BIND:
 ERR_SETSOCK:
     close(sd);
     return ret;
+}
+
+void *pthread_handle(void *c_sd)
+{
+    int sd=*((int *)c_sd);
+    int recv_len = 0;
+    int flag = 0;
+    char rcv_buf[sizeof(DEVICE_DATA)] = {0};
+    DEVICE_DATA device;
+
+    flag = fcntl(sd, F_GETFL, 0);
+    fcntl(sd, F_SETFL, flag & ~O_NONBLOCK);                         //设置成阻塞模式；
+    recv_len = recv(sd, rcv_buf, sizeof(DEVICE_DATA), MSG_WAITALL); //客户端 socket 关闭后， recv不再阻塞 返回-1。
+    if (recv_len < 0)
+    {
+        fprintf(stderr, "recv error %s errno: %d\n", strerror(errno), errno);
+    }
+    memcpy(&device, rcv_buf, sizeof(DEVICE_DATA));
+    printf("device: name-%s, addr-%s, id-%d, temp-%d, hum-%d, dp_temp-%d, dip_fire-%d, smog-%d, PM25-%d\r\n",
+           device.device_name, device.device_addr, device.device_id, device.temp, device.hum, device.dp_temp,
+           device.dip_fire, device.smog, device.PM25);
+    close(sd);
+
+    return NULL;
 }
