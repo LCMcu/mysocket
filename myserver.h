@@ -2,5 +2,4 @@
 #define __MYSERVER_H
 
 
-
 #endif
