@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
-#include "../include/proto.h"
+#include "../myinclude/proto.h"
 
 // ./a.out ip
 int main(int argc, char *argv[])
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         goto ERROR;
     }
     sprintf(device.device_addr, "02#-101");
-    sprintf(device.device_name, "HAVC-MAU");
+    sprintf(device.device_name, "HAVC_MAU");
     device.device_id=2101;
     device.temp=24;
     device.hum=66;
