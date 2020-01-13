@@ -1,14 +1,16 @@
-
 OBJ_S=myserver 
 OBJ_C=myclient
 SRC_S=myserver.c
 SRC_C=myclient.c
+MYLIB_PATH=/home/virbox/work/train/sqlite_socket/mylib
 
-myserver:
+all: $(OBJ_S) $(OBJ_C)
+
+#myserver:
 $(OBJ_S):$(SRC_S)
-	gcc -o $@  $^
+	gcc -pthread -o $@  $^ -L $(MYLIB_PATH) -l mysqlite -lsqlite3
 
-myclient:
+#myclient:
 $(OBJ_C):$(SRC_C)
 	gcc -o $@  $^
 
