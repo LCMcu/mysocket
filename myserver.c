@@ -97,17 +97,29 @@ void *pthread_handle(void *c_sd)
            device.dip_fire, device.smog, device.PM25);
     close(sd);
 
-    device_data_buf.device_num = 10;
-   // device_data_buf.device = malloc(sizeof(DEVICE_DATA) * device_data_buf.device_num);
+    device_data_buf.expect_num = 10;
+    device_data_buf.device = malloc(sizeof(DEVICE_DATA) * device_data_buf.expect_num);
+    memset(device_data_buf.device, 0x00, sizeof(DEVICE_DATA) * device_data_buf.expect_num);
 
     open_db("./test.db", &db);
     creat_table(db, device.device_name);
     insert_data(db, device.device_name, &device);
-    select_data(db, device.device_name, "temp=24", NULL);
-    update(db, device.device_name, "hum=66", "PM25", "999");
+    insert_data(db, device.device_name, &device);
+    insert_data(db, device.device_name, &device);
+    insert_data(db, device.device_name, &device);
+    insert_data(db, device.device_name, &device);
     select_data(db, device.device_name, "temp=24", &device_data_buf);
+    update(db, device.device_name, "hum=66", "PM25", "999");
     del_data(db, device.device_name, "temp=24");
     close_db(db);
+    
+    for (size_t i = 0; i < device_data_buf.actual_num; i++)
+    {
+           printf("device: name-%s, addr-%s, id-%d, temp-%d, hum-%d, dp_temp-%d, dip_fire-%d, smog-%d, PM25-%d\r\n",
+           device_data_buf.device[i].device_name, device_data_buf.device[i].device_addr, device_data_buf.device[i].device_id, \
+           device_data_buf.device[i].temp, device_data_buf.device[i].hum, device_data_buf.device[i].dp_temp,
+           device_data_buf.device[i].dip_fire, device_data_buf.device[i].smog, device_data_buf.device[i].PM25);
+    }
     
     return NULL;
 }
